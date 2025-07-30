@@ -1,0 +1,607 @@
+{%- comment -%}
+  Payment Method Selector v2.1 - Simple Version
+  
+  Fallback version that loads assets from the main assets directory
+  instead of the custom subdirectory for better Shopify compatibility.
+  
+  @version 2.1.0
+  @since 2025-07-30
+{%- endcomment -%}
+
+{%- liquid
+  # Default parameter values
+  assign show_terms = show_terms | default: true
+  assign required = required | default: true
+  assign custom_class = custom_class | default: ''
+  
+  # Component state classes
+  assign component_classes = 'payment-method-selector'
+  if custom_class != blank
+    assign component_classes = component_classes | append: ' ' | append: custom_class
+  endif
+-%}
+
+{%- unless cart.empty? -%}
+<payment-method-selector class="{{ component_classes }}" data-version="2.1.0">
+  
+  {%- comment -%} Component Title {%- endcomment -%}
+  <h4 
+    class="payment-method-selector__title" 
+    id="payment-method-title"
+  >
+    Select Payment Method
+  </h4>
+  
+  {%- comment -%} Payment Method Options {%- endcomment -%}
+  <fieldset 
+    class="payment-method-selector__options" 
+    role="radiogroup" 
+    aria-labelledby="payment-method-title"
+    aria-required="{{ required }}"
+  >
+    <legend class="visually-hidden">Select Payment Method</legend>
+    
+    {%- comment -%} Credit Card Option {%- endcomment -%}
+    <div class="payment-method-option">
+      <label class="payment-method-option__label" for="payment_method_credit_card">
+        <input 
+          type="radio" 
+          id="payment_method_credit_card" 
+          name="attributes[payment_method]" 
+          value="credit_card"
+          class="payment-method-option__input"
+          {% if required %}required="required"{% endif %}
+        >
+        <span class="payment-method-option__text">
+          Credit Card
+        </span>
+      </label>
+    </div>
+    
+    {%- comment -%} Charge Code Option {%- endcomment -%}
+    <div class="payment-method-option">
+      <label class="payment-method-option__label" for="payment_method_charge_code">
+        <input 
+          type="radio" 
+          id="payment_method_charge_code" 
+          name="attributes[payment_method]" 
+          value="charge_code"
+          class="payment-method-option__input"
+          {% if required %}required="required"{% endif %}
+        >
+        <span class="payment-method-option__text">
+          Charge Code
+        </span>
+      </label>
+    </div>
+  </fieldset>
+  
+  {%- comment -%} Charge Code Input Section {%- endcomment -%}
+  <div class="charge-code-section" style="display: none;">
+    <label 
+      for="charge_code_input" 
+      class="charge-code-section__label"
+    >
+      Enter Charge Code
+      <span class="visually-hidden">(required)</span>
+    </label>
+    
+    <input 
+      type="text" 
+      id="charge_code_input" 
+      name="attributes[charge_code]"
+      class="charge-code-section__input"
+      placeholder="e.g., DEPT-12345"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="characters"
+      spellcheck="false"
+      maxlength="20"
+      pattern="[A-Z0-9-]+"
+      aria-describedby="charge-code-help charge-code-error"
+      data-lpignore="true"
+    >
+    
+    <div 
+      id="charge-code-help" 
+      class="charge-code-section__message"
+      role="status"
+      aria-live="polite"
+    >
+      Enter your department or project charge code (letters, numbers, and hyphens only).
+    </div>
+
+    {%- comment -%} Terms & Conditions Checkbox {%- endcomment -%}
+    {%- if show_terms -%}
+    <div class="charge-code-terms" role="group" aria-labelledby="charge-code-terms-label">
+      <label class="charge-code-terms__label" for="charge_code_terms" id="charge-code-terms-label">
+        <input 
+          type="checkbox" 
+          id="charge_code_terms" 
+          name="attributes[charge_code_terms_accepted]"
+          value="true"
+          class="charge-code-terms__checkbox"
+          aria-describedby="charge-code-terms-error"
+        >
+        <span class="charge-code-terms__text">
+          I have read and understand CHG's
+          <a 
+            href="https://chghealthcare.myshopify.com/pages/faq" 
+            class="charge-code-terms__link" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            style="color: #2563eb; text-decoration: underline; font-weight: 500;"
+          >
+            Terms and Conditions
+          </a>
+        </span>
+      </label>
+    </div>
+    {%- endif -%}
+    
+  </div>
+  
+  {%- comment -%} Error Message Container {%- endcomment -%}
+  <div 
+    id="payment-method-error" 
+    class="payment-method-error" 
+    role="alert" 
+    aria-live="assertive"
+    aria-atomic="true"
+    style="display: none; color: #dc2626; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 12px; margin-bottom: 16px;"
+  >
+    Please select a payment method before proceeding to checkout.
+  </div>
+  
+  {%- comment -%} Hidden Error Containers for Screen Readers {%- endcomment -%}
+  <div id="charge-code-error" class="visually-hidden" role="alert" aria-live="assertive"></div>
+  <div id="charge-code-terms-error" class="visually-hidden" role="alert" aria-live="assertive"></div>
+  
+</payment-method-selector>
+{%- endunless -%}
+
+{%- comment -%} Load Component JavaScript - Using main assets directory {%- endcomment -%}
+<script 
+  type="module"
+  src="{{ 'payment-method-selector.js' | asset_url }}" 
+  defer
+></script>
+
+{%- comment -%} Basic CSS for payment method selector {%- endcomment -%}
+<style>
+  .payment-method-selector {
+    border: none; /* Remove border to match other cart fields */
+    border-radius: 0;
+    background: transparent;
+    padding: 0.5rem 0; /* Minimal padding */
+    margin-bottom: 0.75rem;
+    max-width: 100%;
+  }
+  
+  .payment-method-selector__title {
+    margin: 0 0 0.5rem 0; /* Minimal margins */
+    font-size: 0.8rem; /* Much smaller to match cart field labels */
+    font-weight: 500; /* Lighter weight */
+    color: #6b7280; /* Lighter color to match other labels */
+    text-transform: uppercase; /* Match cart field styling */
+    letter-spacing: 0.025em;
+  }
+  
+  .payment-method-selector__options {
+    border: none;
+    margin: 0 0 0.5rem 0; /* Minimal margins */
+    padding: 0;
+    display: flex;
+    flex-direction: row; /* Side-by-side */
+    flex-wrap: wrap;
+    gap: 1rem; /* Increased gap for better spacing without boxes */
+  }
+  
+  .payment-method-option {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto; /* Don't stretch, natural width */
+  }
+  
+  .payment-method-option__label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem; /* Tight gap between radio and text */
+    font-size: 0.75rem; /* Much smaller text */
+    cursor: pointer;
+    padding: 0; /* Remove all padding/boxes */
+    border: none; /* Remove all borders */
+    border-radius: 0;
+    background: transparent; /* No background */
+    transition: none; /* Remove hover effects */
+    width: auto; /* Natural width */
+    min-height: auto; /* Natural height */
+    color: #374151; /* Standard text color */
+    font-weight: 400; /* Normal weight */
+  }
+  
+  .payment-method-option__label:hover {
+    border-color: transparent; /* No hover border */
+    background: transparent; /* No hover background */
+    color: #1f2937; /* Slightly darker on hover */
+  }
+  
+  .payment-method-option__label:focus-within {
+    border-color: transparent;
+    box-shadow: none; /* Remove focus styling from label */
+  }
+  
+  .payment-method-option__input {
+    margin: 0;
+    accent-color: #2563eb;
+    width: 14px; /* Smaller radio buttons */
+    height: 14px;
+    flex-shrink: 0;
+  }
+  
+  .payment-method-option__input:focus {
+    outline: 2px solid #2563eb; /* Focus only on radio itself */
+    outline-offset: 2px;
+  }
+  
+  .payment-method-option__text {
+    font-size: 0.75rem; /* Match smaller size */
+    font-weight: 400; /* Normal weight */
+    color: #374151;
+  }
+  
+  .charge-code-section {
+    margin-top: 0.5rem; /* Minimal top margin */
+    padding: 0.75rem 0; /* Minimal vertical padding, no horizontal */
+    border: none; /* Remove border to match */
+    border-radius: 0;
+    background: transparent; /* No background */
+    font-size: 0.75rem; /* Smaller base font size */
+  }
+  
+  .charge-code-section__label {
+    display: block;
+    font-weight: 500; /* Lighter weight */
+    margin-bottom: 0.375rem; /* Tighter spacing */
+    color: #6b7280; /* Match other field labels */
+    font-size: 0.75rem; /* Smaller label */
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+  
+  .charge-code-section__input {
+    width: 100%;
+    padding: 0.5rem; /* Smaller padding */
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 0.8rem; /* Smaller input text */
+    margin-bottom: 0.375rem; /* Tighter spacing */
+    background: #ffffff;
+  }
+  
+  .charge-code-section__input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+  
+  .charge-code-section__input[aria-invalid="true"] {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  }
+  
+  .charge-code-section__message {
+    font-size: 0.7rem; /* Much smaller help text */
+    color: #9ca3af; /* Lighter color */
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+  }
+  
+  .charge-code-terms__label {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.375rem; /* Tighter gap */
+    font-size: 0.7rem; /* Much smaller terms text */
+    cursor: pointer;
+    line-height: 1.4;
+    color: #6b7280;
+  }
+  
+  .charge-code-terms__checkbox {
+    margin: 0;
+    flex-shrink: 0;
+    margin-top: 1px; /* Slight adjustment for alignment */
+    accent-color: #2563eb;
+    width: 12px; /* Smaller checkbox */
+    height: 12px;
+  }
+  
+  .charge-code-terms__checkbox[aria-invalid="true"] {
+    outline: 2px solid #dc2626;
+    outline-offset: 2px;
+  }
+  
+  .charge-code-terms__link {
+    color: #2563eb;
+    text-decoration: underline;
+    font-weight: 500;
+  }
+  
+  .charge-code-terms__link:hover {
+    color: #1d4ed8;
+    text-decoration: none;
+  }
+  
+  .payment-method-error {
+    color: #dc2626;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 480px) {
+    .payment-method-selector__options {
+      flex-direction: column; /* Stack vertically on small screens */
+      gap: 0.5rem;
+    }
+    
+    .payment-method-option {
+      justify-content: flex-start;
+    }
+    
+    .payment-method-selector__title {
+      font-size: 0.75rem; /* Slightly smaller on mobile */
+    }
+    
+    .payment-method-option__label {
+      font-size: 0.7rem; /* Smaller on mobile */
+    }
+    
+    .payment-method-option__text {
+      font-size: 0.7rem;
+    }
+  }
+  
+  /* Ensure proper spacing in cart context */
+  .cart-drawer .payment-method-selector,
+  .cart-page .payment-method-selector {
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Prevent layout interference with cart items */
+  .payment-method-selector + .cart-items,
+  .payment-method-selector + .cart__items,
+  .payment-method-selector + cart-items {
+    margin-top: 0.5rem; /* Reduced spacing */
+  }
+  
+  /* Match discount/special instructions field styling */
+  .payment-method-selector {
+    border-bottom: 1px solid #e5e7eb; /* Subtle separator like other fields */
+    padding-bottom: 0.75rem;
+  }
+</style>
+
+{%- comment -%} Fallback JavaScript for immediate functionality {%- endcomment -%}
+<script>
+  // Simple fallback that works immediately without waiting for custom elements
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('[PaymentMethodSelector] DOM loaded, initializing...');
+    
+    const paymentRadios = document.querySelectorAll('input[name="attributes[payment_method]"]');
+    const chargeCodeSection = document.querySelector('.charge-code-section');
+    
+    console.log('[PaymentMethodSelector] Found radios:', paymentRadios.length);
+    console.log('[PaymentMethodSelector] Found charge code section:', !!chargeCodeSection);
+    
+    if (paymentRadios.length === 0) {
+      console.error('[PaymentMethodSelector] No payment method radios found!');
+      return;
+    }
+    
+    // Function to show/hide charge code section with enhanced validation
+    function toggleChargeCodeSection(method) {
+      console.log('[PaymentMethodSelector] Toggling section for method:', method);
+      
+      if (chargeCodeSection) {
+        if (method === 'charge_code') {
+          chargeCodeSection.style.display = 'block';
+          console.log('[PaymentMethodSelector] Showing charge code section');
+          
+          // Make required with accessibility - no inline font sizing
+          const input = chargeCodeSection.querySelector('#charge_code_input');
+          const terms = chargeCodeSection.querySelector('#charge_code_terms');
+          
+          if (input) {
+            input.setAttribute('required', 'required');
+            input.setAttribute('aria-invalid', 'false');
+            
+            // Add validation feedback
+            input.addEventListener('blur', function() {
+              const isValid = this.value.length >= 2;
+              this.setAttribute('aria-invalid', isValid ? 'false' : 'true');
+            });
+          }
+          
+          if (terms) {
+            terms.setAttribute('required', 'required');
+            terms.setAttribute('aria-invalid', terms.checked ? 'false' : 'true');
+            
+            // Add validation feedback
+            terms.addEventListener('change', function() {
+              this.setAttribute('aria-invalid', this.checked ? 'false' : 'true');
+              console.log('[PaymentMethodSelector] Terms checkbox changed:', this.checked);
+            });
+          }
+          
+        } else {
+          chargeCodeSection.style.display = 'none';
+          console.log('[PaymentMethodSelector] Hiding charge code section');
+          
+          // Remove required and reset
+          const input = chargeCodeSection.querySelector('#charge_code_input');
+          const terms = chargeCodeSection.querySelector('#charge_code_terms');
+          
+          if (input) {
+            input.removeAttribute('required');
+            input.setAttribute('aria-invalid', 'false');
+            input.value = '';
+          }
+          
+          if (terms) {
+            terms.removeAttribute('required');
+            terms.setAttribute('aria-invalid', 'false');
+            terms.checked = false;
+          }
+        }
+      } else {
+        console.error('[PaymentMethodSelector] Charge code section not found!');
+      }
+    }
+    
+    // Add event listeners to radio buttons
+    paymentRadios.forEach(function(radio) {
+      radio.addEventListener('change', function() {
+        if (this.checked) {
+          console.log('[PaymentMethodSelector] Payment method changed to:', this.value);
+          toggleChargeCodeSection(this.value);
+          
+          // Update cart attributes
+          updateCartAttributes({ payment_method: this.value });
+        }
+      });
+    });
+    
+    // Check for existing selection and restore state (fixes refresh bug)
+    const currentlySelected = Array.from(paymentRadios).find(radio => radio.checked);
+    if (currentlySelected) {
+      console.log('[PaymentMethodSelector] Restoring existing selection:', currentlySelected.value);
+      toggleChargeCodeSection(currentlySelected.value);
+    } else {
+      // Initialize with hidden section
+      toggleChargeCodeSection('credit_card');
+    }
+    
+    // Enhanced checkout validation for preventing bypass
+    const checkoutButtons = document.querySelectorAll('#checkout, [data-testid="Checkout-button"], .cart__checkout-button, .btn--checkout');
+    
+    checkoutButtons.forEach(function(button) {
+      button.addEventListener('click', function(event) {
+        console.log('[PaymentMethodSelector] Checkout clicked - validating...');
+        
+        // Re-get current state to avoid stale references
+        const currentRadios = document.querySelectorAll('input[name="attributes[payment_method]"]');
+        const selectedRadio = Array.from(currentRadios).find(radio => radio.checked);
+        
+        if (!selectedRadio) {
+          event.preventDefault();
+          event.stopPropagation();
+          alert('Please select a payment method before proceeding to checkout.');
+          return false;
+        }
+        
+        if (selectedRadio.value === 'charge_code') {
+          const chargeInput = document.querySelector('#charge_code_input');
+          const termsCheckbox = document.querySelector('#charge_code_terms');
+          
+          console.log('[PaymentMethodSelector] Validating charge code:', {
+            inputExists: !!chargeInput,
+            inputValue: chargeInput?.value || '',
+            termsExists: !!termsCheckbox,
+            termsChecked: termsCheckbox?.checked || false
+          });
+          
+          // Validate charge code
+          if (!chargeInput || !chargeInput.value || chargeInput.value.length < 2) {
+            event.preventDefault();
+            event.stopPropagation();
+            alert('Please enter a valid charge code (at least 2 characters).');
+            if (chargeInput) {
+              chargeInput.focus();
+              chargeInput.setAttribute('aria-invalid', 'true');
+            }
+            return false;
+          }
+          
+          // CRITICAL: Validate terms acceptance
+          if (!termsCheckbox || !termsCheckbox.checked) {
+            event.preventDefault();
+            event.stopPropagation();
+            alert('You must accept the Terms & Conditions to proceed with charge code payment.');
+            if (termsCheckbox) {
+              termsCheckbox.focus();
+              termsCheckbox.setAttribute('aria-invalid', 'true');
+            }
+            return false;
+          }
+          
+          // Mark fields as valid
+          chargeInput.setAttribute('aria-invalid', 'false');
+          termsCheckbox.setAttribute('aria-invalid', 'false');
+        }
+        
+        console.log('[PaymentMethodSelector] Checkout validation passed');
+        return true;
+      });
+    });
+    
+    // Cart update function
+    function updateCartAttributes(attributes) {
+      const updateUrl = '/cart/update.js';
+      
+      fetch(updateUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ attributes: attributes })
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('[PaymentMethodSelector] Cart updated:', data);
+      })
+      .catch(error => {
+        console.error('[PaymentMethodSelector] Cart update failed:', error);
+      });
+    }
+    
+    // Charge code input sanitization
+    const chargeCodeInput = document.querySelector('#charge_code_input');
+    if (chargeCodeInput) {
+      chargeCodeInput.addEventListener('input', function() {
+        const sanitized = this.value
+          .trim()
+          .toUpperCase()
+          .replace(/[^A-Z0-9-]/g, '')
+          .substring(0, 20);
+        
+        if (this.value !== sanitized) {
+          this.value = sanitized;
+        }
+        
+        updateCartAttributes({
+          payment_method: 'charge_code',
+          charge_code: sanitized
+        });
+      });
+    }
+    
+    console.log('[PaymentMethodSelector] Initialization complete');
+  });
+</script>

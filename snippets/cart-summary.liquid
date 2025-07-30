@@ -88,85 +88,8 @@
   </div>
 </div>
 
-<!-- Payment Method Selector -->
-{%- unless cart.empty? -%}
-<payment-method-selector class="payment-method-selector">
-  <h4 id="payment-method-title" class="payment-method-selector__title">Select Payment Method</h4>
-  
-  <div class="payment-method-selector__options" role="radiogroup" aria-labelledby="payment-method-title">
-    <label class="payment-method-option">
-      <input 
-        type="radio" 
-        name="attributes[payment_method]" 
-        value="credit_card" 
-        class="payment-method-option__input"
-        required
-        aria-describedby="payment-method-error"
-      >
-      <span class="payment-method-option__label">Credit Card</span>
-    </label>
-    
-    <label class="payment-method-option">
-      <input 
-        type="radio" 
-        name="attributes[payment_method]" 
-        value="charge_code" 
-        class="payment-method-option__input"
-        required
-        aria-describedby="payment-method-error"
-      >
-      <span class="payment-method-option__label">Charge Code</span>
-    </label>
-  </div>
-  
-  <div class="charge-code-section" style="display: none;" aria-live="polite">
-    <label for="charge_code_input" class="charge-code-section__label">
-      Charge Code (Required)
-    </label>
-    <input 
-      type="text" 
-      id="charge_code_input" 
-      name="attributes[charge_code]"
-      class="charge-code-section__input"
-      placeholder="Enter your charge code"
-      aria-describedby="charge-code-message"
-      maxlength="50"
-      pattern="[A-Za-z0-9\-_]{1,50}"
-      title="Charge code should contain only letters, numbers, hyphens, and underscores (1-50 characters)"
-      autocomplete="off"
-    >
-    <div id="charge-code-message" class="charge-code-section__message">
-      Please make sure to select 'Charge Code' as a payment method at checkout – credit cards are not required for orders paid with Charge Codes.
-    </div>
-    
-    <!-- ✅ Terms & Conditions Checkbox -->
-    <div class="charge-code-terms" style="margin-top: var(--margin-md);">
-      <label class="charge-code-terms__label">
-        <input 
-          type="checkbox" 
-          id="charge_code_terms" 
-          name="attributes[charge_code_terms_accepted]"
-          value="true"
-          class="charge-code-terms__checkbox"
-          required
-          aria-describedby="charge-code-terms-error"
-        >
-        <span class="charge-code-terms__text">
-          I have read and understand CHG's 
-          <a href="{{ routes.root_url }}" 
-             class="charge-code-terms__link" 
-             target="_blank" 
-             rel="noopener">Terms and Conditions</a>
-        </span>
-      </label>
-    </div>
-  </div>
-  
-  <div id="payment-method-error" class="payment-method-error" style="display: none;" role="alert" aria-live="assertive">
-    Please select a payment method before proceeding to checkout.
-  </div>
-</payment-method-selector>
-{%- endunless -%}
+<!-- ✅ Payment Method Selector v2.1 - Simple Version (Shopify Compatible) -->
+{% render 'payment-method-selector-simple' %}
 
 <div class="cart__ctas">
   <button

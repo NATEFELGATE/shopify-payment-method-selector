@@ -1,0 +1,223 @@
+{%- comment -%}
+  Payment Method Selector v2.1
+  
+  A modular, reusable Liquid snippet for payment method selection.
+  Follows Shopify Liquid best practices with semantic HTML and accessibility.
+  
+  NEW IN v2.1: 
+  ✅ Enhanced terms checkbox with blue underlined homepage link
+  ✅ Improved ARIA attributes for better accessibility
+  ✅ Cart state management integration
+  
+  Features:
+  ✅ Semantic HTML5 structure
+  ✅ Full ARIA accessibility support  
+  ✅ Cart.attributes integration
+  ✅ Terms & conditions validation with styled link
+  ✅ Mobile-first responsive design
+  ✅ Modular, reusable component
+  
+  Usage:
+  {% render 'custom/payment-method-selector' %}
+  
+  Parameters:
+  - show_terms: boolean (default: true) - Show terms checkbox
+  - required: boolean (default: true) - Make selection required
+  - custom_class: string - Additional CSS classes
+  
+  @author GitHub Copilot Agent - Best Practices Refactor
+  @version 2.1.0
+  @since 2025-07-30
+{%- endcomment -%}
+
+{%- liquid
+  # Default parameter values
+  assign show_terms = show_terms | default: true
+  assign required = required | default: true
+  assign custom_class = custom_class | default: ''
+  
+  # Component state classes
+  assign component_classes = 'payment-method-selector'
+  if custom_class != blank
+    assign component_classes = component_classes | append: ' ' | append: custom_class
+  endif
+-%}
+
+{%- unless cart.empty? -%}
+<payment-method-selector class="{{ component_classes }}" data-version="2.0.0">
+  
+  {%- comment -%} Component Title {%- endcomment -%}
+  <h4 
+    id="payment-method-title" 
+    class="payment-method-selector__title"
+  >
+    {{ 'checkout.payment_method_title' | t: default: 'Select Payment Method' }}
+  </h4>
+  
+  {%- comment -%} Payment Method Options {%- endcomment -%}
+  <div 
+    class="payment-method-selector__options" 
+    role="radiogroup" 
+    aria-labelledby="payment-method-title"
+    aria-required="{{ required }}"
+  >
+    
+    {%- comment -%} Credit Card Option {%- endcomment -%}
+    <label class="payment-method-option" for="payment-method-credit-card">
+      <input 
+        type="radio" 
+        id="payment-method-credit-card"
+        name="attributes[payment_method]" 
+        value="credit_card" 
+        class="payment-method-option__input"
+        {% if required %}required{% endif %}
+        aria-describedby="payment-method-error"
+      >
+      <span class="payment-method-option__label">
+        {{ 'checkout.payment_method_credit_card' | t: default: 'Credit Card' }}
+      </span>
+    </label>
+    
+    {%- comment -%} Charge Code Option {%- endcomment -%}
+    <label class="payment-method-option" for="payment-method-charge-code">
+      <input 
+        type="radio" 
+        id="payment-method-charge-code"
+        name="attributes[payment_method]" 
+        value="charge_code" 
+        class="payment-method-option__input"
+        {% if required %}required{% endif %}
+        aria-describedby="payment-method-error"
+      >
+      <span class="payment-method-option__label">
+        {{ 'checkout.payment_method_charge_code' | t: default: 'Charge Code' }}
+      </span>
+    </label>
+    
+  </div>
+  
+  {%- comment -%} Charge Code Input Section {%- endcomment -%}
+  <div class="charge-code-section" style="display: none;" role="group" aria-labelledby="charge-code-label">
+    
+    <label 
+      for="charge_code_input" 
+      id="charge-code-label"
+      class="charge-code-section__label"
+    >
+      {{ 'checkout.charge_code_label' | t: default: 'Enter Charge Code' }}
+      <span class="visually-hidden">{{ 'form.required_field' | t: default: '(required)' }}</span>
+    </label>
+    
+    <input 
+      type="text" 
+      id="charge_code_input" 
+      name="attributes[charge_code]"
+      class="charge-code-section__input"
+      placeholder="{{ 'checkout.charge_code_placeholder' | t: default: 'e.g., DEPT-12345' }}"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="characters"
+      spellcheck="false"
+      maxlength="20"
+      pattern="[A-Z0-9-]+"
+      aria-describedby="charge-code-help charge-code-error"
+      data-lpignore="true"
+    >
+    
+    <div 
+      id="charge-code-help" 
+      class="charge-code-section__message"
+      role="status"
+      aria-live="polite"
+    >
+      {{ 'checkout.charge_code_help' | t: default: 'Enter your department or project charge code (letters, numbers, and hyphens only).' }}
+    </div>
+
+    {%- comment -%} Terms & Conditions Checkbox {%- endcomment -%}
+    {%- if show_terms -%}
+    <div class="charge-code-terms" role="group" aria-labelledby="charge-code-terms-label">
+      <label class="charge-code-terms__label" for="charge_code_terms" id="charge-code-terms-label">
+        <input 
+          type="checkbox" 
+          id="charge_code_terms" 
+          name="attributes[charge_code_terms_accepted]"
+          value="true"
+          class="charge-code-terms__checkbox"
+          aria-describedby="charge-code-terms-error"
+        >
+        <span class="charge-code-terms__text">
+          {{ 'checkout.terms_prefix' | t: default: 'I have read and understand CHG\'s' }}
+          <a 
+            href="{{ pages.terms-and-conditions.url | default: routes.root_url }}" 
+            class="charge-code-terms__link" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            aria-label="{{ 'checkout.terms_link_aria' | t: default: 'Terms and Conditions (opens in new window)' }}"
+          >
+            {{ 'checkout.terms_link_text' | t: default: 'Terms and Conditions' }}
+          </a>
+        </span>
+      </label>
+    </div>
+    {%- endif -%}
+    
+  </div>
+  
+  {%- comment -%} Error Message Container {%- endcomment -%}
+  <div 
+    id="payment-method-error" 
+    class="payment-method-error" 
+    role="alert" 
+    aria-live="assertive"
+    aria-atomic="true"
+    style="display: none;"
+  >
+    {{ 'checkout.payment_method_error' | t: default: 'Please select a payment method before proceeding to checkout.' }}
+  </div>
+  
+  {%- comment -%} Hidden Error Containers for Screen Readers {%- endcomment -%}
+  <div id="charge-code-error" class="visually-hidden" role="alert" aria-live="assertive"></div>
+  <div id="charge-code-terms-error" class="visually-hidden" role="alert" aria-live="assertive"></div>
+  
+</payment-method-selector>
+{%- endunless -%}
+
+{%- comment -%} Load Component JavaScript {%- endcomment -%}
+<script 
+  src="{{ 'custom/payment-method-selector.js' | asset_url }}" 
+  type="module" 
+  fetchpriority="high"
+  defer
+></script>
+
+{%- comment -%} Load Component Styles {%- endcomment -%}
+<link 
+  rel="stylesheet" 
+  href="{{ 'custom/payment-method-selector.css' | asset_url }}" 
+  media="all"
+>
+
+{%- comment -%}
+  Structured Data for Payment Methods
+  Helps with SEO and accessibility tools
+{%- endcomment -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "PaymentMethod",
+  "name": "Payment Method Selector",
+  "description": "Choose between Credit Card and Charge Code payment options",
+  "acceptedPaymentMethod": [
+    {
+      "@type": "PaymentMethod",
+      "name": "Credit Card",
+      "identifier": "credit_card"
+    },
+    {
+      "@type": "PaymentMethod", 
+      "name": "Charge Code",
+      "identifier": "charge_code"
+    }
+  ]
+}
+</script>

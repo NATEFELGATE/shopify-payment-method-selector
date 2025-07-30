@@ -1,0 +1,414 @@
+/**
+ * Payment Method Selector Styles v2.1
+ * 
+ * Clean, modular CSS following enterprise best practices.
+ * Optimized using :is() pseudo-class for maintainability and reduced redundancy.
+ * 
+ * NEW IN v2.1:
+ * ✅ Enhanced terms checkbox styling with blue underlined links
+ * ✅ Improved state management visual feedback
+ * ✅ Better accessibility indicators for required fields
+ * 
+ * Features:
+ * ✅ Modern CSS with :is(), :not(), and logical properties
+ * ✅ Mobile-first responsive design
+ * ✅ Semantic BEM naming conventions
+ * ✅ CSS custom properties for theming
+ * ✅ Accessibility-first design patterns
+ * ✅ Smooth animations and micro-interactions
+ * 
+ * @author GitHub Copilot Agent - Best Practices Refactor
+ * @version 2.1.0
+ * @since 2025-07-30
+ */
+
+/* =============================================
+   CSS CUSTOM PROPERTIES (DESIGN TOKENS)
+   ============================================= */
+
+:root {
+  /* Payment Method Selector Variables */
+  --payment-selector-border-radius: var(--border-radius, 8px);
+  --payment-selector-border-color: var(--color-border, #e5e5e5);
+  --payment-selector-background: var(--color-background, #ffffff);
+  --payment-selector-padding: var(--padding-lg, 1.5rem);
+  --payment-selector-gap: var(--gap-md, 1rem);
+  
+  /* Form Input Variables */
+  --payment-input-border-radius: var(--style-border-radius-inputs, 6px);
+  --payment-input-border-color: var(--color-input-border, #d1d5db);
+  --payment-input-background: var(--color-input-background, #ffffff);
+  --payment-input-text-color: var(--color-input-text, #374151);
+  --payment-input-focus-color: var(--color-primary, #2563eb);
+  
+  /* Error State Variables */
+  --payment-error-color: #dc2626;
+  --payment-error-background: #fef2f2;
+  --payment-error-border: #fecaca;
+  
+  /* Success State Variables */
+  --payment-success-color: #059669;
+  --payment-success-background: #f0fdf4;
+  --payment-success-border: #a7f3d0;
+  
+  /* Animation Variables */
+  --payment-transition-speed: var(--animation-speed, 0.2s);
+  --payment-transition-easing: var(--animation-easing, ease-in-out);
+}
+
+/* =============================================
+   MAIN COMPONENT CONTAINER
+   ============================================= */
+
+payment-method-selector {
+  display: block;
+  width: 100%;
+  margin-block-end: var(--margin-lg, 1.5rem);
+  border: 1px solid var(--payment-selector-border-color);
+  border-radius: var(--payment-selector-border-radius);
+  padding: var(--payment-selector-padding);
+  background-color: var(--payment-selector-background);
+  transition: box-shadow var(--payment-transition-speed) var(--payment-transition-easing);
+}
+
+payment-method-selector:focus-within {
+  box-shadow: 0 0 0 3px rgb(var(--color-primary-rgb, 37 99 235) / 0.1);
+}
+
+/* =============================================
+   PAYMENT METHOD SELECTOR TITLE
+   ============================================= */
+
+.payment-method-selector__title {
+  margin: 0 0 var(--margin-md, 1rem) 0;
+  font-size: var(--font-size-md, 1.125rem);
+  font-weight: var(--font-weight-bold, 700);
+  color: var(--color-foreground, #111827);
+  line-height: 1.4;
+}
+
+/* =============================================
+   PAYMENT METHOD OPTIONS CONTAINER
+   ============================================= */
+
+.payment-method-selector__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-sm, 0.75rem);
+  margin-block-end: var(--margin-md, 1rem);
+}
+
+/* =============================================
+   INDIVIDUAL PAYMENT METHOD OPTION
+   ============================================= */
+
+.payment-method-option {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-xs, 0.5rem);
+  cursor: pointer;
+  padding: var(--padding-sm, 0.75rem);
+  border: 1px solid var(--payment-selector-border-color);
+  border-radius: var(--payment-selector-border-radius);
+  background-color: var(--payment-selector-background);
+  transition: all var(--payment-transition-speed) var(--payment-transition-easing);
+  position: relative;
+}
+
+/* ✅ Consolidated hover and focus states using :is() */
+.payment-method-option:is(:hover, :focus-within) {
+  background-color: rgb(var(--color-foreground-rgb, 17 24 39) / 0.02);
+  border-color: var(--payment-input-focus-color);
+  transform: translateY(-1px);
+}
+
+.payment-method-option:has(:checked) {
+  background-color: rgb(var(--color-primary-rgb, 37 99 235) / 0.05);
+  border-color: var(--payment-input-focus-color);
+  box-shadow: 0 0 0 1px var(--payment-input-focus-color);
+}
+
+/* =============================================
+   RADIO INPUT STYLING
+   ============================================= */
+
+.payment-method-option__input {
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--payment-input-focus-color);
+  transform: scale(1.1);
+}
+
+.payment-method-option__input:focus-visible {
+  outline: 2px solid var(--payment-input-focus-color);
+  outline-offset: 2px;
+}
+
+.payment-method-option__label {
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-foreground, #111827);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* =============================================
+   CHARGE CODE SECTION
+   ============================================= */
+
+.charge-code-section {
+  margin-block-start: var(--margin-md, 1rem);
+  padding: var(--padding-md, 1rem);
+  border: 1px solid var(--payment-selector-border-color);
+  border-radius: var(--payment-selector-border-radius);
+  background-color: rgb(var(--color-foreground-rgb, 17 24 39) / 0.01);
+  transition: opacity var(--payment-transition-speed) var(--payment-transition-easing);
+}
+
+.charge-code-section[style*="display: none"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.charge-code-section__label {
+  display: block;
+  margin-block-end: var(--margin-xs, 0.5rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--color-foreground, #111827);
+  font-size: var(--font-size-sm, 0.875rem);
+}
+
+/* =============================================
+   FORM INPUT STYLING
+   ============================================= */
+
+.charge-code-section__input {
+  width: 100%;
+  padding: var(--padding-sm, 0.75rem);
+  border: 1px solid var(--payment-input-border-color);
+  border-radius: var(--payment-input-border-radius);
+  background-color: var(--payment-input-background);
+  color: var(--payment-input-text-color);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-family: inherit;
+  transition: all var(--payment-transition-speed) var(--payment-transition-easing);
+  margin-block-end: var(--margin-sm, 0.75rem);
+}
+
+.charge-code-section__input::placeholder {
+  color: rgb(var(--color-input-text-rgb, 55 65 81) / 0.6);
+}
+
+/* ✅ Consolidated focus states using :is() */
+.charge-code-section__input:is(:focus, :focus-visible) {
+  outline: none;
+  border-color: var(--payment-input-focus-color);
+  box-shadow: 0 0 0 3px rgb(var(--color-primary-rgb, 37 99 235) / 0.1);
+}
+
+.charge-code-section__input:invalid {
+  border-color: var(--payment-error-color);
+  box-shadow: 0 0 0 1px var(--payment-error-color);
+}
+
+/* =============================================
+   CHARGE CODE HELPER MESSAGE
+   ============================================= */
+
+.charge-code-section__message {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--payment-success-color);
+  background-color: var(--payment-success-background);
+  padding: var(--padding-sm, 0.75rem);
+  border-radius: var(--payment-input-border-radius);
+  border-inline-start: 3px solid var(--payment-success-color);
+  margin-block-start: var(--margin-xs, 0.5rem);
+}
+
+/* =============================================
+   TERMS & CONDITIONS CHECKBOX
+   ============================================= */
+
+.charge-code-terms__label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gap-xs, 0.5rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  line-height: 1.5;
+  cursor: pointer;
+  margin-block-start: var(--margin-sm, 0.75rem);
+}
+
+.charge-code-terms__checkbox {
+  margin: 0;
+  flex-shrink: 0;
+  margin-block-start: 2px; /* Align with first line of text */
+  accent-color: var(--payment-input-focus-color);
+  cursor: pointer;
+}
+
+.charge-code-terms__text {
+  color: var(--color-foreground, #111827);
+}
+
+.charge-code-terms__link {
+  color: var(--payment-input-focus-color);
+  text-decoration: underline;
+  font-weight: var(--font-weight-medium, 500);
+  transition: color var(--payment-transition-speed) var(--payment-transition-easing);
+}
+
+.charge-code-terms__link:hover {
+  color: var(--color-primary-hover, #1d4ed8);
+  text-decoration: none;
+}
+
+/* =============================================
+   ERROR MESSAGE STYLING
+   ============================================= */
+
+.payment-method-error {
+  color: var(--payment-error-color);
+  background-color: var(--payment-error-background);
+  border: 1px solid var(--payment-error-border);
+  border-radius: var(--payment-input-border-radius);
+  padding: var(--padding-sm, 0.75rem);
+  margin-block-end: var(--margin-md, 1rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  line-height: 1.4;
+  display: none;
+  animation: slideInTop 0.3s var(--payment-transition-easing);
+}
+
+.payment-method-error[style*="display: block"] {
+  display: block;
+}
+
+/* =============================================
+   RESPONSIVE DESIGN
+   ============================================= */
+
+@media screen and (max-width: 749px) {
+  payment-method-selector {
+    margin-block-end: var(--margin-md, 1rem);
+    padding: var(--payment-selector-padding);
+  }
+
+  .payment-method-selector__options {
+    gap: var(--gap-xs, 0.5rem);
+  }
+
+  .payment-method-option {
+    padding: var(--padding-xs, 0.5rem);
+  }
+
+  .charge-code-section {
+    padding: var(--padding-sm, 0.75rem);
+  }
+
+  .charge-code-section__input {
+    padding: var(--padding-xs, 0.5rem);
+  }
+}
+
+@media screen and (min-width: 750px) {
+  .payment-method-selector__options {
+    flex-direction: row;
+    gap: var(--gap-md, 1rem);
+  }
+
+  .payment-method-option {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* =============================================
+   MICRO-ANIMATIONS
+   ============================================= */
+
+@keyframes slideInTop {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* =============================================
+   ACCESSIBILITY ENHANCEMENTS
+   ============================================= */
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  payment-method-selector {
+    border-width: 2px;
+  }
+  
+  .payment-method-option {
+    border-width: 2px;
+  }
+  
+  .charge-code-section__input {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  /* ✅ Consolidated animation resets using :is() */
+  :is(
+    payment-method-selector,
+    .payment-method-option,
+    .charge-code-section__input,
+    .charge-code-terms__link,
+    .payment-method-error
+  ) {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Focus visible support for older browsers */
+@supports not selector(:focus-visible) {
+  /* ✅ Consolidated focus fallbacks using :is() */
+  :is(
+    .payment-method-option__input:focus,
+    .charge-code-section__input:focus,
+    .charge-code-terms__checkbox:focus
+  ) {
+    outline: 2px solid var(--payment-input-focus-color);
+    outline-offset: 2px;
+  }
+}
+
+/* =============================================
+   UTILITY CLASSES
+   ============================================= */
+
+.payment-method-selector--loading {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.payment-method-selector--loading::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: rgb(255 255 255 / 0.8);
+  border-radius: inherit;
+  cursor: wait;
+}
+
+/* ✅ Clean, maintainable selectors - refactored according to best practices */
