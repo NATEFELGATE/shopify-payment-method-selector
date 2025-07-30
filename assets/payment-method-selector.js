@@ -1,5 +1,6 @@
 import { Component } from '@theme/component';
 import { debounce, fetchConfig } from '@theme/utilities';
+import { CartNoteTemplates, debugCartNote } from './cart-note-utils.js';
 
 /**
  * Payment Method Selector Component v1.1
@@ -122,6 +123,15 @@ class PaymentMethodSelector extends Component {
     
     if (selectedMethod === 'charge_code') {
       this.showChargeCodeSection();
+      // Update cart note to show payment method selection
+      const currentChargeCode = this.chargeCodeInput instanceof HTMLInputElement ? 
+        this.sanitizeChargeCode(this.chargeCodeInput.value) : '';
+      const noteContent = this.buildCartNote(currentChargeCode);
+      
+      // Enhanced debugging with utility
+      debugCartNote(noteContent, 'payment_method_selected_charge_code');
+      
+      this.updateCartNote(noteContent);
     } else if (selectedMethod === 'credit_card') {
       this.hideChargeCodeSection();
       this.clearChargeCode();
@@ -160,9 +170,53 @@ class PaymentMethodSelector extends Component {
   clearChargeCode() {
     if (this.chargeCodeInput instanceof HTMLInputElement) {
       this.chargeCodeInput.value = '';
-      // Clear both the form field and the cart note
-      this.updateCartNote('');
+      // Use utility to clear charge code from cart note but preserve other content
+      const existingNote = this.getCurrentCartNote();
+      const noteContent = CartNoteTemplates.creditCardPayment(existingNote);
+      
+      // Enhanced debugging with utility
+      debugCartNote(noteContent, 'charge_code_cleared');
+      
+      this.updateCartNote(noteContent);
     }
+  }
+
+  /**
+   * Builds a structured cart note using the modular utility
+   * @param {string} chargeCode - The charge code value (clean, no prefix)
+   * @returns {string} - The formatted cart note content
+   */
+  buildCartNote(chargeCode) {
+    const selectedPaymentMethod = this.getSelectedPaymentMethod();
+    const existingNote = this.getCurrentCartNote();
+    
+    // Use the modular cart note utility
+    if (selectedPaymentMethod === 'charge_code' && chargeCode) {
+      return CartNoteTemplates.chargeCodePayment(chargeCode, existingNote);
+    } else if (selectedPaymentMethod === 'credit_card') {
+      return CartNoteTemplates.creditCardPayment(existingNote);
+    }
+    
+    // If no payment method selected, preserve existing note
+    return existingNote;
+  }
+
+  /**
+   * Gets the current cart note value
+   * @returns {string} - The current cart note content
+   */
+  getCurrentCartNote() {
+    const cartFormNote = document.querySelector('#charge-code-cart-note');
+    if (cartFormNote instanceof HTMLInputElement) {
+      return cartFormNote.value || '';
+    }
+    
+    const cartNoteTextarea = document.querySelector('#cart-note');
+    if (cartNoteTextarea instanceof HTMLTextAreaElement) {
+      return cartNoteTextarea.value || '';
+    }
+    
+    return '';
   }
 
   /**
@@ -204,13 +258,13 @@ class PaymentMethodSelector extends Component {
       event.target.value = sanitizedChargeCode;
     }
     
-    // Format the note content for consistency
-    const noteContent = sanitizedChargeCode ? `Charge Code: ${sanitizedChargeCode}` : '';
+    // Build structured cart note with clean formatting using utility
+    const noteContent = this.buildCartNote(sanitizedChargeCode);
     
-    // Update the input value to the formatted version
-    event.target.value = noteContent;
+    // Enhanced debugging with utility
+    debugCartNote(noteContent, 'charge_code_input_change');
     
-    // Also update the cart via AJAX for real-time sync
+    // Update cart note via AJAX for real-time sync
     await this.updateCartNote(noteContent);
   }, 300);
 
@@ -257,6 +311,16 @@ class PaymentMethodSelector extends Component {
    * @param {string} noteContent - The note content to set
    */
   async updateCartNote(noteContent) {
+    // Enhanced logging for debugging customer issues
+    console.log('[PaymentMethodSelector] Cart note updated to:', noteContent);
+    console.log('[PaymentMethodSelector] Note structure:', {
+      length: noteContent.length,
+      lines: noteContent.split('\n').length,
+      hasPaymentMethod: noteContent.includes('Payment Method:'),
+      hasChargeCode: noteContent.includes('Charge Code:'),
+      preview: noteContent.substring(0, 100) + (noteContent.length > 100 ? '...' : '')
+    });
+
     // Guard clause: ensure cart update URL is available
     try {
       if (!Theme.routes.cart_update_url) {
@@ -297,25 +361,32 @@ class PaymentMethodSelector extends Component {
         return;
       }
 
+      // Success logging
+      console.log('[PaymentMethodSelector] Cart note successfully updated via AJAX');
+      
       // Also update any existing cart note textarea if present
       const cartNoteTextarea = document.querySelector('#cart-note');
       if (cartNoteTextarea instanceof HTMLTextAreaElement) {
         cartNoteTextarea.value = noteContent;
+        console.log('[PaymentMethodSelector] Updated cart note textarea');
       }
 
       // Update the hidden note field in the cart form
       const cartFormNote = document.querySelector('#charge-code-cart-note');
       if (cartFormNote instanceof HTMLInputElement) {
         cartFormNote.value = noteContent;
+        console.log('[PaymentMethodSelector] Updated hidden cart note field');
       }
 
       this.logEvent('cart_note_updated', { 
         noteLength: noteContent.length,
-        hasChargeCode: noteContent.includes('Charge Code:')
+        hasChargeCode: noteContent.includes('Charge Code:'),
+        lines: noteContent.split('\n').length
       });
 
     } catch (error) {
       console.error('[PaymentMethodSelector] Failed to update cart note:', error);
+      console.error('[PaymentMethodSelector] Note content that failed:', noteContent);
       this.logEvent('cart_update_error', { 
         error: error.message,
         noteContent: noteContent.substring(0, 50)
