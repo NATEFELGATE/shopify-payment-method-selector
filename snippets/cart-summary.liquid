@@ -1,0 +1,316 @@
+{%- doc -%}
+  Renders the cart summary totals.
+{%- enddoc -%}
+
+<script
+  type="module"
+  src="{{ 'payment-method-selector.js' | asset_url }}"
+></script>
+
+<div class="cart__summary-totals">
+  {% # We need to keep this node in place to allow morphing to work properly # %}
+  <div class="cart__original-total-container cart-primary-typography">
+    {%- if cart.cart_level_discount_applications.size > 0 -%}
+      <span class="cart__summary-item cart__original-total">
+        <span class="cart__original-total-label">{{ 'content.cart_subtotal' | t }}</span>
+        <span class="cart__original-total-value cart-secondary-typography">
+          {{- cart.original_total_price | money -}}
+        </span>
+      </span>
+      <div class="cart__summary-discounts">
+        <ul
+          class="discounts list-unstyled"
+          role="list"
+          aria-label="{{ 'content.discounts' | t }}"
+        >
+          {%- for discount in cart.cart_level_discount_applications -%}
+            <li class="cart__summary-item cart__discount">
+              <span class="cart__discount-label">
+                {{- 'icon-discount.svg' | inline_asset_content -}}
+                {{ discount.title | escape }}
+              </span>
+              <span class="cart__discount-value cart-secondary-typography"
+                >-{{ discount.total_allocated_amount | money -}}
+              </span>
+            </li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- endif -%}
+  </div>
+
+  {% if settings.show_cart_note or settings.show_add_discount_code %}
+    <div class="cart-actions">
+      {% if settings.show_cart_note %}
+        {% render 'cart-note' %}
+      {% endif %}
+
+      {% if settings.show_add_discount_code %}
+        {% render 'cart-discount', section_id: section.id | default: 'cart' %}
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {%- liquid
+    if settings.currency_code_enabled_cart_total
+      assign total_price = cart.total_price | money_with_currency
+    else
+      assign total_price = cart.total_price | money
+    endif
+  -%}
+
+  <div class="cart__total-container">
+    <span
+      class="cart__summary-item cart__total"
+      role="status"
+    >
+      <span class="cart__total-label cart-primary-typography">{{ 'content.cart_estimated_total' | t }}</span>
+      <text-component
+        ref="cartTotal"
+        value="{{ total_price | strip_html }}"
+        class="cart__total-value cart-secondary-typography"
+        {% comment %} Used by payment_terms web component {% endcomment %}
+        data-cart-subtotal
+      >
+        {{ total_price }}
+      </text-component>
+    </span>
+    {% if settings.show_installments %}
+      <span class="cart__summary-item cart__installments">
+        {% form 'cart', cart %}
+          {{ form | payment_terms }}
+        {% endform %}
+      </span>
+    {% endif %}
+    <div class="cart__summary-item tax-note cart-primary-typography">
+      {% render 'tax-info', has_discounts_enabled: settings.show_add_discount_code %}
+    </div>
+  </div>
+</div>
+
+<!-- Payment Method Selector -->
+{%- unless cart.empty? -%}
+<payment-method-selector class="payment-method-selector">
+  <h4 id="payment-method-title" class="payment-method-selector__title">Select Payment Method</h4>
+  
+  <div class="payment-method-selector__options" role="radiogroup" aria-labelledby="payment-method-title">
+    <label class="payment-method-option">
+      <input 
+        type="radio" 
+        name="attributes[payment_method]" 
+        value="credit_card" 
+        class="payment-method-option__input"
+        required
+        aria-describedby="payment-method-error"
+      >
+      <span class="payment-method-option__label">Credit Card</span>
+    </label>
+    
+    <label class="payment-method-option">
+      <input 
+        type="radio" 
+        name="attributes[payment_method]" 
+        value="charge_code" 
+        class="payment-method-option__input"
+        required
+        aria-describedby="payment-method-error"
+      >
+      <span class="payment-method-option__label">Charge Code</span>
+    </label>
+  </div>
+  
+  <div class="charge-code-section" style="display: none;" aria-live="polite">
+    <label for="charge_code_input" class="charge-code-section__label">
+      Charge Code (Required)
+    </label>
+    <input 
+      type="text" 
+      id="charge_code_input" 
+      name="note"
+      class="charge-code-section__input"
+      placeholder="Enter your charge code"
+      aria-describedby="charge-code-message"
+      maxlength="50"
+      pattern="[A-Za-z0-9\-_]{1,50}"
+      title="Charge code should contain only letters, numbers, hyphens, and underscores (1-50 characters)"
+      autocomplete="off"
+    >
+    <div id="charge-code-message" class="charge-code-section__message">
+      Please make sure to select 'Charge Code' as a payment method at checkout – credit cards are not required for orders paid with Charge Codes.
+    </div>
+  </div>
+  
+  <div id="payment-method-error" class="payment-method-error" style="display: none;" role="alert" aria-live="assertive">
+    Please select a payment method before proceeding to checkout.
+  </div>
+</payment-method-selector>
+{%- endunless -%}
+
+<div class="cart__ctas">
+  <button
+    type="submit"
+    id="checkout"
+    class="cart__checkout-button button"
+    name="checkout"
+    {% if cart == empty %}
+      disabled
+    {% endif %}
+    form="cart-form"
+  >
+    {{ 'content.checkout' | t }}
+  </button>
+
+  {% if additional_checkout_buttons and settings.show_accelerated_checkout_buttons %}
+    <div class="additional-checkout-buttons additional-checkout-buttons--vertical">
+      {{ content_for_additional_checkout_buttons }}
+    </div>
+  {% endif %}
+</div>
+
+{% stylesheet %}
+  .cart-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-2xs);
+    border-block: 1px solid var(--color-border);
+    padding-block: var(--padding-sm);
+    margin-block-start: var(--margin-3xs);
+  }
+
+  .cart__summary-totals:not(:has(.cart-actions)) {
+    margin-block-start: var(--margin-3xs);
+    border-block-start: 1px solid var(--color-border);
+    padding-block-start: var(--margin-xl);
+  }
+
+  .cart__installments {
+    color: var(--color-foreground);
+  }
+
+  /* Payment Method Selector Styles */
+  payment-method-selector {
+    display: block;
+    width: 100%;
+    margin-bottom: var(--margin-lg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: var(--padding-lg);
+    background-color: var(--color-background);
+  }
+
+  .payment-method-selector__title {
+    margin: 0 0 var(--margin-md) 0;
+    font-size: var(--font-size-md);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-foreground);
+  }
+
+  .payment-method-selector__options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm);
+    margin-bottom: var(--margin-md);
+  }
+
+  .payment-method-option {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-xs);
+    cursor: pointer;
+    padding: var(--padding-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    transition: all 0.2s ease;
+  }
+
+  .payment-method-option:hover {
+    background-color: rgb(var(--color-foreground-rgb) / 0.05);
+  }
+
+  .payment-method-option__input {
+    margin: 0;
+  }
+
+  .payment-method-option__input.error {
+    outline: 2px solid #dc3545;
+    outline-offset: 2px;
+  }
+
+  .payment-method-option__label {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-foreground);
+  }
+
+  .charge-code-section {
+    margin-top: var(--margin-md);
+    padding: var(--padding-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background-color: rgb(var(--color-foreground-rgb) / 0.02);
+  }
+
+  .charge-code-section__label {
+    display: block;
+    margin-bottom: var(--margin-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-foreground);
+  }
+
+  .charge-code-section__input {
+    width: 100%;
+    padding: var(--padding-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--margin-sm);
+  }
+
+  .charge-code-section__input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgb(var(--color-primary-rgb) / 0.2);
+  }
+
+  .charge-code-section__message {
+    font-size: var(--font-size-xs);
+    color: var(--color-primary);
+    background-color: rgb(var(--color-primary-rgb) / 0.1);
+    padding: var(--padding-sm);
+    border-radius: var(--border-radius);
+    border-left: 3px solid var(--color-primary);
+  }
+
+  .payment-method-error {
+    color: #dc3545;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: var(--border-radius);
+    padding: var(--padding-sm);
+    margin-bottom: var(--margin-md);
+    font-size: var(--font-size-sm);
+  }
+
+  /* Mobile responsiveness */
+  @media screen and (max-width: 749px) {
+    payment-method-selector {
+      margin-bottom: var(--margin-md);
+      padding: var(--padding-md);
+    }
+
+    .payment-method-selector__options {
+      gap: var(--gap-xs);
+    }
+
+    .payment-method-option {
+      padding: var(--padding-xs);
+    }
+
+    .charge-code-section {
+      padding: var(--padding-sm);
+    }
+
+    .charge-code-section__input {
+      padding: var(--padding-xs);
+    }
+  }
+{% endstylesheet %}

@@ -1,0 +1,53 @@
+{
+  "name": "shopify-payment-method-selector",
+  "version": "1.1.0",
+  "description": "Enterprise-grade payment method selector for Shopify with charge code support and HidePay integration",
+  "main": "assets/payment-method-selector.js",
+  "type": "module",
+  "scripts": {
+    "lint": "echo 'Linting Shopify Liquid files...'",
+    "format": "echo 'Formatting files...'",
+    "validate": "echo 'Validating theme structure...'"
+  },
+  "keywords": [
+    "shopify",
+    "theme",
+    "payment",
+    "selector",
+    "charge-code",
+    "hidepay",
+    "cart",
+    "checkout",
+    "e-commerce"
+  ],
+  "author": "Generated via GitHub Copilot",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/shopify-payment-method-selector.git"
+  },
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/shopify-payment-method-selector/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/shopify-payment-method-selector#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "shopify": {
+    "theme_compatibility": "Dawn 2.0+",
+    "required_files": [
+      "assets/payment-method-selector.js",
+      "snippets/cart-summary.liquid",
+      "snippets/cart-products.liquid"
+    ],
+    "features": [
+      "custom-elements",
+      "cart-integration",
+      "accessibility",
+      "analytics",
+      "mobile-responsive"
+    ]
+  }
+}
