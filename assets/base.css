@@ -45,9 +45,8 @@ img {
   height: auto;
 }
 
-input,
-textarea,
-select {
+/* ✅ Refactored using :is() for maintainability – Copilot Agent */
+:is(input, textarea, select) {
   font: inherit;
   border-radius: var(--style-border-radius-inputs);
 }
@@ -62,11 +61,8 @@ select {
   color: currentcolor;
 }
 
-.product-card,
-.collection-card,
-.resource-card,
-.predictive-search-results__card--product,
-.predictive-search-results__card {
+/* ✅ Refactored using :is() for maintainability – Copilot Agent */
+:is(.product-card, .collection-card, .resource-card, .predictive-search-results__card--product, .predictive-search-results__card) {
   position: relative;
   transition: transform var(--hover-transition-duration) var(--hover-transition-timing),
     box-shadow var(--hover-transition-duration) var(--hover-transition-timing);
@@ -99,26 +95,18 @@ select {
 }
 
 @media (any-pointer: fine) and (prefers-reduced-motion: no-preference) {
-  .card-hover-effect-lift .product-card:hover,
-  .card-hover-effect-lift .collection-card:hover,
-  .card-hover-effect-lift .resource-card:hover,
-  .card-hover-effect-lift .predictive-search-results__card:hover {
+  /* ✅ Refactored using :is() for maintainability – Copilot Agent */
+  .card-hover-effect-lift :is(.product-card, .collection-card, .resource-card, .predictive-search-results__card):hover {
     transform: translateY(calc(-1 * var(--hover-lift-amount)));
   }
 
-  .card-hover-effect-lift .header .product-card:hover,
-  .card-hover-effect-lift .header .collection-card:hover,
-  .card-hover-effect-lift .header .resource-card:hover,
-  .card-hover-effect-lift .header-drawer .product-card:hover,
-  .card-hover-effect-lift .header-drawer .collection-card:hover,
-  .card-hover-effect-lift .header-drawer .resource-card:hover {
+  /* ✅ Refactored using :is() for maintainability – Copilot Agent */
+  .card-hover-effect-lift :is(.header, .header-drawer) :is(.product-card, .collection-card, .resource-card):hover {
     transform: none;
   }
 
-  .card-hover-effect-scale .product-card:hover,
-  .card-hover-effect-scale .collection-card:hover,
-  .card-hover-effect-scale .resource-card:hover,
-  .card-hover-effect-scale .predictive-search-results__card:hover {
+  /* ✅ Refactored using :is() for maintainability – Copilot Agent */
+  .card-hover-effect-scale :is(.product-card, .collection-card, .resource-card, .predictive-search-results__card):hover {
     transform: scale(var(--hover-scale-amount));
   }
 

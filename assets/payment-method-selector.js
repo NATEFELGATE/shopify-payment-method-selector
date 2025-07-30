@@ -1,6 +1,5 @@
 import { Component } from '@theme/component';
 import { debounce, fetchConfig } from '@theme/utilities';
-import { CartNoteTemplates, debugCartNote } from './cart-note-utils.js';
 
 /**
  * Payment Method Selector Component v1.1
@@ -118,24 +117,61 @@ class PaymentMethodSelector extends Component {
     const selectedMethod = event.target.value;
     this.logEvent('payment_method_selected', { method: selectedMethod });
     
-    // Sync payment method selection to cart attributes for backend tracking
+    // ✅ Debug: Check cart items visibility before payment method change
+    const cartItems = document.querySelector('.cart-items, .cart__items, cart-items-component');
+    if (cartItems) {
+      console.log('[PaymentMethodSelector] Cart items visibility before change:', {
+        display: getComputedStyle(cartItems).display,
+        visibility: getComputedStyle(cartItems).visibility,
+        opacity: getComputedStyle(cartItems).opacity
+      });
+    } else {
+      console.warn('[PaymentMethodSelector] Cart items container not found in DOM');
+    }
+    
+    // ✅ Store payment method in cart attributes only (no cart note)
     this.updateCartAttributes({ payment_method: selectedMethod });
     
     if (selectedMethod === 'charge_code') {
       this.showChargeCodeSection();
-      // Update cart note to show payment method selection
+      // Store any existing charge code in attributes
       const currentChargeCode = this.chargeCodeInput instanceof HTMLInputElement ? 
         this.sanitizeChargeCode(this.chargeCodeInput.value) : '';
-      const noteContent = this.buildCartNote(currentChargeCode);
-      
-      // Enhanced debugging with utility
-      debugCartNote(noteContent, 'payment_method_selected_charge_code');
-      
-      this.updateCartNote(noteContent);
+      if (currentChargeCode) {
+        this.updateCartAttributes({ charge_code: currentChargeCode });
+      }
     } else if (selectedMethod === 'credit_card') {
       this.hideChargeCodeSection();
       this.clearChargeCode();
     }
+    
+    // ✅ Debug: Check cart items visibility after payment method change
+    setTimeout(() => {
+      const cartItemsAfter = document.querySelector('.cart-items, .cart__items, cart-items-component');
+      if (cartItemsAfter) {
+        const afterStyles = getComputedStyle(cartItemsAfter);
+        console.log('[PaymentMethodSelector] Cart items visibility after change:', {
+          display: afterStyles.display,
+          visibility: afterStyles.visibility,
+          opacity: afterStyles.opacity
+        });
+        
+        if (afterStyles.display === 'none' || afterStyles.visibility === 'hidden') {
+          console.error('[PaymentMethodSelector] ⚠️ Cart items disappeared after payment method change!');
+          this.logEvent('cart_items_disappeared', { 
+            method: selectedMethod,
+            display: afterStyles.display,
+            visibility: afterStyles.visibility
+          });
+          // Try to restore visibility
+          if (cartItemsAfter instanceof HTMLElement) {
+            cartItemsAfter.style.display = '';
+            cartItemsAfter.style.visibility = '';
+            console.log('[PaymentMethodSelector] Attempted to restore cart items visibility');
+          }
+        }
+      }
+    }, 100);
     
     this.hideError();
   }
@@ -144,11 +180,38 @@ class PaymentMethodSelector extends Component {
    * Shows the charge code section
    */
   showChargeCodeSection() {
-    if (this.chargeCodeSection instanceof HTMLElement) {
-      this.chargeCodeSection.style.display = 'block';
-      if (this.chargeCodeInput instanceof HTMLInputElement) {
-        this.chargeCodeInput.setAttribute('required', 'required');
+    const section = this.chargeCodeSection || document.querySelector('.charge-code-section');
+    
+    if (section instanceof HTMLElement) {
+      section.style.display = 'block';
+      
+      // ✅ Log debug events if the element is missing or fails to render
+      console.log('[PaymentMethodSelector] Charge code section displayed successfully');
+      this.logEvent('charge_code_section_shown', { 
+        sectionFound: true,
+        display: section.style.display 
+      });
+      
+      const input = this.chargeCodeInput || section.querySelector('#charge_code_input');
+      if (input instanceof HTMLInputElement) {
+        input.setAttribute('required', 'required');
+        // Focus after a brief delay to ensure DOM is ready
+        setTimeout(() => input.focus(), 100);
+        console.log('[PaymentMethodSelector] Charge code input made required and focused');
+      } else {
+        console.error('[PaymentMethodSelector] Charge code input not found!');
+        this.logEvent('charge_code_input_missing', { inputFound: false });
       }
+
+      // ✅ Make terms checkbox required when charge code is selected
+      const termsCheckbox = document.querySelector('#charge_code_terms');
+      if (termsCheckbox instanceof HTMLInputElement) {
+        termsCheckbox.setAttribute('required', 'required');
+        console.log('[PaymentMethodSelector] Terms checkbox made required');
+      }
+    } else {
+      console.error('[PaymentMethodSelector] Charge code section not found in DOM!');
+      this.logEvent('charge_code_section_missing', { sectionFound: false });
     }
   }
 
@@ -156,54 +219,44 @@ class PaymentMethodSelector extends Component {
    * Hides the charge code section
    */
   hideChargeCodeSection() {
-    if (this.chargeCodeSection instanceof HTMLElement) {
-      this.chargeCodeSection.style.display = 'none';
-      if (this.chargeCodeInput instanceof HTMLInputElement) {
-        this.chargeCodeInput.removeAttribute('required');
+    const section = this.chargeCodeSection || document.querySelector('.charge-code-section');
+    
+    if (section instanceof HTMLElement) {
+      section.style.display = 'none';
+      
+      const input = this.chargeCodeInput || section.querySelector('#charge_code_input');
+      if (input instanceof HTMLInputElement) {
+        input.removeAttribute('required');
+        input.value = ''; // Clear the input when hiding
+        console.log('[PaymentMethodSelector] Charge code input cleared and made optional');
+      }
+
+      // ✅ Make terms checkbox optional when not using charge code
+      const termsCheckbox = document.querySelector('#charge_code_terms');
+      if (termsCheckbox instanceof HTMLInputElement) {
+        termsCheckbox.removeAttribute('required');
+        termsCheckbox.checked = false;
+        console.log('[PaymentMethodSelector] Terms checkbox made optional and unchecked');
       }
     }
   }
 
   /**
-   * Clears the charge code input and removes it from cart note
+   * Clears the charge code input and removes it from cart attributes
    */
   clearChargeCode() {
     if (this.chargeCodeInput instanceof HTMLInputElement) {
       this.chargeCodeInput.value = '';
-      // Use utility to clear charge code from cart note but preserve other content
-      const existingNote = this.getCurrentCartNote();
-      const noteContent = CartNoteTemplates.creditCardPayment(existingNote);
-      
-      // Enhanced debugging with utility
-      debugCartNote(noteContent, 'charge_code_cleared');
-      
-      this.updateCartNote(noteContent);
+      // ✅ Clear charge code from cart attributes (no cart note logic)
+      this.updateCartAttributes({ charge_code: '' });
+      console.log('[PaymentMethodSelector] Cleared charge code from cart attributes');
     }
   }
 
   /**
-   * Builds a structured cart note using the modular utility
-   * @param {string} chargeCode - The charge code value (clean, no prefix)
-   * @returns {string} - The formatted cart note content
-   */
-  buildCartNote(chargeCode) {
-    const selectedPaymentMethod = this.getSelectedPaymentMethod();
-    const existingNote = this.getCurrentCartNote();
-    
-    // Use the modular cart note utility
-    if (selectedPaymentMethod === 'charge_code' && chargeCode) {
-      return CartNoteTemplates.chargeCodePayment(chargeCode, existingNote);
-    } else if (selectedPaymentMethod === 'credit_card') {
-      return CartNoteTemplates.creditCardPayment(existingNote);
-    }
-    
-    // If no payment method selected, preserve existing note
-    return existingNote;
-  }
-
-  /**
-   * Gets the current cart note value
+   * Gets the current cart note value (legacy - no longer used)
    * @returns {string} - The current cart note content
+   * @deprecated Cart notes are no longer used for charge codes
    */
   getCurrentCartNote() {
     const cartFormNote = document.querySelector('#charge-code-cart-note');
@@ -258,14 +311,13 @@ class PaymentMethodSelector extends Component {
       event.target.value = sanitizedChargeCode;
     }
     
-    // Build structured cart note with clean formatting using utility
-    const noteContent = this.buildCartNote(sanitizedChargeCode);
+    // ✅ Store charge code in cart attributes only (no cart note)
+    await this.updateCartAttributes({ 
+      payment_method: 'charge_code',
+      charge_code: sanitizedChargeCode 
+    });
     
-    // Enhanced debugging with utility
-    debugCartNote(noteContent, 'charge_code_input_change');
-    
-    // Update cart note via AJAX for real-time sync
-    await this.updateCartNote(noteContent);
+    console.log('[PaymentMethodSelector] Charge code updated in cart attributes:', sanitizedChargeCode);
   }, 300);
 
   /**
@@ -307,96 +359,6 @@ class PaymentMethodSelector extends Component {
   }
 
   /**
-   * Updates the cart note with charge code information
-   * @param {string} noteContent - The note content to set
-   */
-  async updateCartNote(noteContent) {
-    // Enhanced logging for debugging customer issues
-    console.log('[PaymentMethodSelector] Cart note updated to:', noteContent);
-    console.log('[PaymentMethodSelector] Note structure:', {
-      length: noteContent.length,
-      lines: noteContent.split('\n').length,
-      hasPaymentMethod: noteContent.includes('Payment Method:'),
-      hasChargeCode: noteContent.includes('Charge Code:'),
-      preview: noteContent.substring(0, 100) + (noteContent.length > 100 ? '...' : '')
-    });
-
-    // Guard clause: ensure cart update URL is available
-    try {
-      if (!Theme.routes.cart_update_url) {
-        throw new Error('Cart update URL not defined');
-      }
-    } catch (error) {
-      console.warn('[PaymentMethodSelector] Cart update URL not defined. Skipping note update.');
-      this.logEvent('cart_update_failed', { reason: 'missing_cart_update_url' });
-      return;
-    }
-
-    if (this.#activeFetch) {
-      this.#activeFetch.abort();
-    }
-
-    const abortController = new AbortController();
-    this.#activeFetch = abortController;
-
-    try {
-      const config = fetchConfig('json', {
-        body: JSON.stringify({ note: noteContent }),
-      });
-
-      const response = await fetch(Theme.routes.cart_update_url, {
-        ...config,
-        signal: abortController.signal,
-      });
-
-      // Log response failures for debugging
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.warn(`[PaymentMethodSelector] Cart note update failed: ${response.status} - ${errorText}`);
-        this.logEvent('cart_update_failed', { 
-          status: response.status, 
-          error: errorText,
-          noteContent: noteContent.substring(0, 50) // Log first 50 chars for debugging
-        });
-        return;
-      }
-
-      // Success logging
-      console.log('[PaymentMethodSelector] Cart note successfully updated via AJAX');
-      
-      // Also update any existing cart note textarea if present
-      const cartNoteTextarea = document.querySelector('#cart-note');
-      if (cartNoteTextarea instanceof HTMLTextAreaElement) {
-        cartNoteTextarea.value = noteContent;
-        console.log('[PaymentMethodSelector] Updated cart note textarea');
-      }
-
-      // Update the hidden note field in the cart form
-      const cartFormNote = document.querySelector('#charge-code-cart-note');
-      if (cartFormNote instanceof HTMLInputElement) {
-        cartFormNote.value = noteContent;
-        console.log('[PaymentMethodSelector] Updated hidden cart note field');
-      }
-
-      this.logEvent('cart_note_updated', { 
-        noteLength: noteContent.length,
-        hasChargeCode: noteContent.includes('Charge Code:'),
-        lines: noteContent.split('\n').length
-      });
-
-    } catch (error) {
-      console.error('[PaymentMethodSelector] Failed to update cart note:', error);
-      console.error('[PaymentMethodSelector] Note content that failed:', noteContent);
-      this.logEvent('cart_update_error', { 
-        error: error.message,
-        noteContent: noteContent.substring(0, 50)
-      });
-    } finally {
-      this.#activeFetch = null;
-    }
-  }
-
-  /**
    * Handles checkout button click
    * @param {Event} event - The click event
    */
@@ -412,6 +374,8 @@ class PaymentMethodSelector extends Component {
     
     if (selectedPaymentMethod === 'charge_code') {
       const chargeCode = this.chargeCodeInput instanceof HTMLInputElement ? this.sanitizeChargeCode(this.chargeCodeInput.value) : '';
+      
+      // ✅ Check charge code
       if (!chargeCode) {
         event.preventDefault();
         this.logEvent('checkout_blocked', { reason: 'no_charge_code' });
@@ -424,7 +388,17 @@ class PaymentMethodSelector extends Component {
         this.showError('Charge code must be at least 2 characters long.');
         return false;
       }
-      this.logEvent('checkout_attempted', { method: 'charge_code', code_length: chargeCode.length });
+
+      // ✅ Check terms checkbox
+      const termsCheckbox = document.querySelector('#charge_code_terms');
+      if (termsCheckbox instanceof HTMLInputElement && !termsCheckbox.checked) {
+        event.preventDefault();
+        this.logEvent('checkout_blocked', { reason: 'terms_not_accepted' });
+        this.showError('Please accept the Terms and Conditions to proceed with charge code payment.');
+        return false;
+      }
+
+      this.logEvent('checkout_attempted', { method: 'charge_code', code_length: chargeCode.length, terms_accepted: true });
     } else {
       this.logEvent('checkout_attempted', { method: 'credit_card' });
     }

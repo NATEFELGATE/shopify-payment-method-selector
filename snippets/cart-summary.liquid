@@ -126,7 +126,7 @@
     <input 
       type="text" 
       id="charge_code_input" 
-      name="note"
+      name="attributes[charge_code]"
       class="charge-code-section__input"
       placeholder="Enter your charge code"
       aria-describedby="charge-code-message"
@@ -137,6 +137,28 @@
     >
     <div id="charge-code-message" class="charge-code-section__message">
       Please make sure to select 'Charge Code' as a payment method at checkout – credit cards are not required for orders paid with Charge Codes.
+    </div>
+    
+    <!-- ✅ Terms & Conditions Checkbox -->
+    <div class="charge-code-terms" style="margin-top: var(--margin-md);">
+      <label class="charge-code-terms__label">
+        <input 
+          type="checkbox" 
+          id="charge_code_terms" 
+          name="attributes[charge_code_terms_accepted]"
+          value="true"
+          class="charge-code-terms__checkbox"
+          required
+          aria-describedby="charge-code-terms-error"
+        >
+        <span class="charge-code-terms__text">
+          I have read and understand CHG's 
+          <a href="{{ routes.root_url }}" 
+             class="charge-code-terms__link" 
+             target="_blank" 
+             rel="noopener">Terms and Conditions</a>
+        </span>
+      </label>
     </div>
   </div>
   
@@ -288,6 +310,37 @@
     padding: var(--padding-sm);
     margin-bottom: var(--margin-md);
     font-size: var(--font-size-sm);
+  }
+
+  /* Terms & Conditions Checkbox Styles */
+  .charge-code-terms__label {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-xs);
+    font-size: var(--font-size-sm);
+    line-height: 1.4;
+    cursor: pointer;
+  }
+
+  .charge-code-terms__checkbox {
+    margin: 0;
+    flex-shrink: 0;
+    margin-top: 2px; /* Align with first line of text */
+  }
+
+  .charge-code-terms__text {
+    color: var(--color-foreground);
+  }
+
+  .charge-code-terms__link {
+    color: #0066cc;
+    text-decoration: underline;
+    font-weight: var(--font-weight-medium);
+  }
+
+  .charge-code-terms__link:hover {
+    color: #0052a3;
+    text-decoration: none;
   }
 
   /* Mobile responsiveness */

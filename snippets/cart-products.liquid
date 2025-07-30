@@ -323,15 +323,6 @@
           </tbody>
         </table>
       </div>
-      
-      <!-- Hidden field for cart note (used by payment method selector) -->
-      <input 
-        type="hidden" 
-        name="note" 
-        id="charge-code-cart-note" 
-        value="{{ cart.note | escape }}"
-        data-purpose="payment-method-selector"
-      >
     </form>
   {%- endif -%}
 </div>
