@@ -26,12 +26,12 @@
   "devDependencies": {},
   "repository": {
     "type": "git",
-    "url": "https://github.com/YOUR_USERNAME/shopify-payment-method-selector.git"
+    "url": "https://github.com/NATEFELGATE/shopify-payment-method-selector.git"
   },
   "bugs": {
-    "url": "https://github.com/YOUR_USERNAME/shopify-payment-method-selector/issues"
+    "url": "https://github.com/NATEFELGATE/shopify-payment-method-selector/issues"
   },
-  "homepage": "https://github.com/YOUR_USERNAME/shopify-payment-method-selector#readme",
+  "homepage": "https://github.com/NATEFELGATE/shopify-payment-method-selector#readme",
   "engines": {
     "node": ">=14.0.0"
   },
